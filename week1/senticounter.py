@@ -28,17 +28,18 @@ def run(input_file_path):
                 while not done_looping:
                     try:
                         item = next(phrase_iterator)
-                        if item in neg_words:
+                        if item.lower() in neg_words:
                             found_dict[item] += 0
-                        if item == "the":
+                        if item.lower() == "the":
                             next_item = next(phrase_iterator)
-                            if next_item in neg_words:
+                            if next_item.lower() in neg_words:
                                 found_dict[next_item] += 0
                                 word_after_neg = next(phrase_iterator)
-                                if word_after_neg == "phone":
+                                if word_after_neg.lower() == "phone":
                                     found_dict[next_item] += 1
                     except StopIteration:
                         done_looping = True
+                break
     return found_dict
 
 
