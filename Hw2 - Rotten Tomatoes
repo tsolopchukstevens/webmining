@@ -1,0 +1,80 @@
+from bs4 import BeautifulSoup
+import re
+import time
+import requests
+
+def getCritic(review):
+    criticChunk=review.find('a',{'href':re.compile('/critic/')})
+    if criticChunk: return criticChunk.text
+    else: return 'NA'
+
+
+def getRating(review):
+    if review.find('div',{'class':re.compile('review_icon icon small fresh')}): return 'fresh'
+    elif review.find('div',{'class':re.compile('review_icon icon small rotten')}): return 'rotten'
+    else: return 'NA'
+    
+
+def getTextLen(review):
+    textChunk=review.find('div',{'class':'the_review'})
+    if textChunk: return len(textChunk.text)
+    else: return 'NA'
+
+def getSource(review):
+    sourceChunk=review.find('em',{'class':'subtle critic-publication'})
+    if sourceChunk: return sourceChunk.text
+    else: return 'NA'
+
+def getDate(review):
+    dateChunk=review.find('div',{'class':'review-date subtle small'})
+    if dateChunk: return dateChunk.text
+    else: return 'NA'
+
+		
+
+def run(url):
+
+    pageNum=2 
+
+    fw=open('reviews.txt','w') 
+	
+    for p in range(1,pageNum+1):
+
+        print ('page',p)
+        html=None
+
+        if p==1: pageLink=url 
+        else: pageLink=url+'?page='+str(p)+'&sort=' 
+		
+        for i in range(5): 
+            try:
+            
+                response=requests.get(pageLink,headers = { 'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36', })
+                html=response.content 
+                break 
+            except Exception: 
+                print ('failed attempt',i)
+                time.sleep(2) 
+				
+		
+        if not html:continue 
+        
+        soup = BeautifulSoup(html.decode('ascii', 'ignore'),'lxml')  
+
+        reviews=soup.findAll('div', {'class':re.compile('review_table_row')}) 
+        for review in reviews:
+
+            critic = getCritic(review)
+            rating = getRating(review)
+            source = getSource(review)
+            date = getDate(review)
+            textlen = getTextLen(review)
+            
+            print(critic, rating, source, date, textlen)
+            
+            fw.write(critic+'\t'+rating+'\t' +source+'\t'+date+'\t'+str(textlen)+'\n') 
+    fw.close()
+
+if __name__=='__main__':
+    url='https://www.rottentomatoes.com/m/space_jam/reviews/'
+    run(url)
